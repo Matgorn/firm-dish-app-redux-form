@@ -20,6 +20,8 @@ renderError({ error, touched, pristine }, customError) {
     }
   }
 
+  parseValue = (value) => parseInt(value);
+
   renderConditionals = () => {
     if(this.props.dishType === 'soup') {
       return <Field 
@@ -29,6 +31,7 @@ renderError({ error, touched, pristine }, customError) {
         renderError={this.renderError}
         placeholder="Select spiciness scale"
         type="number"
+        normalize={this.parseValue}
       />
     } else if (this.props.dishType === 'pizza') {
       return (
@@ -40,6 +43,7 @@ renderError({ error, touched, pristine }, customError) {
             renderError={this.renderError}
             placeholder="Provide number of slices"
             type="number"
+            normalize={this.parseValue}
           />
           <Field
             name="diameter"
@@ -48,6 +52,7 @@ renderError({ error, touched, pristine }, customError) {
             renderError={this.renderError}
             placeholder="Provide pizza's diameter"
             type="number"
+            normalize={this.parseValue}
           />
         </React.Fragment>
       );
@@ -59,6 +64,7 @@ renderError({ error, touched, pristine }, customError) {
         renderError={this.renderError}
         placeholder="Provide the number of slices"
         type="number"
+        normalize={this.parseValue}
       />
     } else {
       return ''
@@ -66,6 +72,7 @@ renderError({ error, touched, pristine }, customError) {
   }
 
   onSubmit(formValues) {
+
     console.log(formValues);
   }
 
