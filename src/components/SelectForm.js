@@ -1,6 +1,6 @@
 const DishType = ({ label, renderError, meta, children, input }) => {
   return (
-    <div className="field">
+    <div className={`field required ${meta.error && meta.touched ? 'error' : ''}`}>
       <label>{label}</label>
         <div>
           <select {...input}>

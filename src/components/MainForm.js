@@ -1,26 +1,54 @@
 import React from 'react';
 import { Component } from 'react';
-import { Field, reduxForm } from 'redux-form';
+import { Field, reduxForm, SubmissionError } from 'redux-form';
 import { connect } from 'react-redux';
-import setDishType from '../actions';
-import DishType from './DishType';
-import FormField from './FormField';
+import { mapStateToProps, mapDispatchToProps } from '../connect';
+import DishType from './SelectForm';
+import FormField from './TextField';
 
 class FormCreate extends Component {
-renderError({ error, touched, pristine }, customError) {
-    if(touched && error) {
+  renderError({ error }) {
+    if(error) {
       return (
       <p className="ui pointing red basic label">{error}</p>
       );
     }
-    if(pristine && touched && !error) {
-      return (
-        <p className="ui pointing red basic label">{customError}</p>
-      );
+  }
+
+  parseValue = (value) => {
+    if(value) {
+      return parseInt(value)
     }
   }
 
-  parseValue = (value) => parseInt(value);
+  parseValueFloat = (value) => {
+    if(value) {
+      return parseFloat(value);
+    }
+  }
+
+  onSubmit = async (formValues) => {
+    const { startLoading, submitForm, reset } = this.props
+    startLoading();
+    await fetch('https://frosty-wood-6558.getsandbox.com:443/dishes', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(formValues)
+    })
+      .then(response => response.json())
+      .then(data => {
+        if(data.id) {
+          submitForm(data);
+          reset();
+          this.props.setDishType('')
+        } else {
+          submitForm({})
+          throw new SubmissionError(data);
+        }
+      })
+  }
 
   renderConditionals = () => {
     if(this.props.dishType === 'soup') {
@@ -30,7 +58,7 @@ renderError({ error, touched, pristine }, customError) {
         label="Spiciness Scale"
         renderError={this.renderError}
         placeholder="Select spiciness scale"
-        type="number"
+        formType="number"
         normalize={this.parseValue}
       />
     } else if (this.props.dishType === 'pizza') {
@@ -42,7 +70,7 @@ renderError({ error, touched, pristine }, customError) {
             label="No. of slices"
             renderError={this.renderError}
             placeholder="Provide number of slices"
-            type="number"
+            formType="number"
             normalize={this.parseValue}
           />
           <Field
@@ -51,8 +79,9 @@ renderError({ error, touched, pristine }, customError) {
             label="Diameter"
             renderError={this.renderError}
             placeholder="Provide pizza's diameter"
-            type="number"
-            normalize={this.parseValue}
+            formType="number"
+            step="0.1"
+            normalize={this.parseValueFloat}
           />
         </React.Fragment>
       );
@@ -63,7 +92,7 @@ renderError({ error, touched, pristine }, customError) {
         label="Number of slices"
         renderError={this.renderError}
         placeholder="Provide the number of slices"
-        type="number"
+        formType="number"
         normalize={this.parseValue}
       />
     } else {
@@ -71,18 +100,13 @@ renderError({ error, touched, pristine }, customError) {
     }
   }
 
-  onSubmit(formValues) {
-
-    console.log(formValues);
-  }
-
   render() {
-    console.log(this.props.formCreate);
     return (
       <form 
-        className="ui form"
         onSubmit={this.props.handleSubmit(this.onSubmit)}
         id="dishform"
+        className={`ui ${window.innerWidth < 400 ? 'mini' : ''} form container segment very padded`}
+        style={{ marginTop: '1em' }}
       >
         <Field 
           name="name"
@@ -90,7 +114,7 @@ renderError({ error, touched, pristine }, customError) {
           label="Enter name of the dish"
           renderError={this.renderError} 
           placeholder="Dish name"
-          type="text"
+          formType="text"
         />
 
         <Field 
@@ -118,36 +142,13 @@ renderError({ error, touched, pristine }, customError) {
 
         {this.renderConditionals()}
 
-        <button className="ui button primary">Submit</button>
+        <button 
+          className="ui fluid button bottom attached primary"
+        >Submit</button>
       </form>
     );
   }
 }
-
-
-
-const mapStateToProps = (state) => {
-  return {
-    dishType: state.dishType
-  }
-}
-
-const mapDispatchToProps = { setDishType }
-
-
-const validate = (formValues) => {
-  const errors = {};
-
-  if(!formValues.name) {
-    errors.name = 'You must enter a title';
-  }
-
-  if(!formValues.preparation_time) {
-    errors.preparation_time = 'You must enter a preparation time'
-  }
-
-  return errors;
-};
 
 FormCreate = connect(
   mapStateToProps,
@@ -156,5 +157,4 @@ FormCreate = connect(
 
 export default reduxForm({
   form: 'formCreate',
-  validate
 })(FormCreate);
